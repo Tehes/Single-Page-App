@@ -3,7 +3,8 @@ var app = (function() {
     Variables
     ---------------------------------------------------------------------------------------------------*/
     var startingPageName = "home";
-    var fileType = "html";
+    var fileType;
+    var standardFileType = "html";
     var directory = "content";
     var contentElement = document.querySelector("main");
 
@@ -12,16 +13,37 @@ var app = (function() {
     ---------------------------------------------------------------------------------------------------*/
     function router() {
       var hash = location.hash.substring(1) || startingPageName;
+      if (!fileType) {
+        fileType = standardFileType;
+      }
 
       fetch(directory+"/"+hash+"."+fileType)
         .then(function(response) {
           if (!response.ok) {
             throw new Error("HTTP error, status = " + response.status);
           }
-          return response.text();
+          if (fileType === "json") {
+              return response.json();
+          }
+          else {
+            return response.text();
+          }
         })
-        .then(function(text) {
-          contentElement.innerHTML = text;
+        .then(function(data) {
+          contentElement.innerHTML = "";
+
+          if (fileType === "json") {
+            for(var i = 0; i < data.products.length; i++) {
+              var listItem = document.createElement('li');
+              listItem.innerHTML = '<strong>' + data.products[i].Name + '</strong>';
+              listItem.innerHTML +=' can be found in ' + data.products[i].Location + '.';
+              listItem.innerHTML +=' Cost: <strong>£' + data.products[i].Price + '</strong>';
+              contentElement.appendChild(listItem);
+            }
+          }
+          else {
+              contentElement.innerHTML = data;
+          }
         })
         .catch(function(error) {
           contentElement.innerHTML = '';
@@ -31,10 +53,15 @@ var app = (function() {
         });
     }
 
+    function checkFileType() {
+      fileType = event.target.dataset.fileType || standardFileType;
+    }
+
     function init() {
         document.addEventListener("touchstart", function() {}, false);
         window.addEventListener("hashchange", router, false);
         window.addEventListener("DOMContentLoaded", router, false);
+        document.addEventListener("click", checkFileType, false);
     }
 
     /* --------------------------------------------------------------------------------------------------
