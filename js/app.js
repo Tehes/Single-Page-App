@@ -33,13 +33,8 @@ var app = (function() {
           contentElement.innerHTML = "";
 
           if (fileType === "json") {
-            for(var i = 0; i < data.products.length; i++) {
-              var listItem = document.createElement('li');
-              listItem.innerHTML = '<strong>' + data.products[i].Name + '</strong>';
-              listItem.innerHTML +=' can be found in ' + data.products[i].Location + '.';
-              listItem.innerHTML +=' Cost: <strong>£' + data.products[i].Price + '</strong>';
-              contentElement.appendChild(listItem);
-            }
+            var templateData = renderTemplate(data);
+            contentElement.appendChild(templateData);
           }
           else {
               contentElement.innerHTML = data;
@@ -51,6 +46,18 @@ var app = (function() {
             document.createTextNode('Error: ' + error.message)
           );
         });
+    }
+
+    function renderTemplate(data) {
+      var list = document.createElement("ul");
+        for(var i = 0; i < data.products.length; i++) {
+          var listItem = document.createElement('li');
+          listItem.innerHTML = '<strong>' + data.products[i].Name + '</strong>';
+          listItem.innerHTML +=' can be found in ' + data.products[i].Location + '.';
+          listItem.innerHTML +=' Cost: <strong>£' + data.products[i].Price + '</strong>';
+          list.appendChild(listItem);
+        }
+      return list;
     }
 
     function checkFileType() {
