@@ -57,7 +57,19 @@ var app = (function() {
           listItem.innerHTML +=' Cost: <strong>£' + data.products[i].Price + '</strong>';
           list.appendChild(listItem);
         }
-      return list;
+		var list2 = document.createElement("ul");
+		var list2Item = "";
+		for (var i = 0; i < data.products.length; i++) {
+			list2Item += `
+			<li>
+				<strong>${data.products[i].Name}</strong>
+				can be found in ${data.products[i].Location}. 
+				Cost: <strong>£ ${data.products[i].Price}</strong>
+			</li>
+			`;
+		}
+		list2.innerHTML = list2Item;
+      return list2;
     }
 
     function checkFileType() {
