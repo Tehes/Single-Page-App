@@ -4,18 +4,18 @@ Is this an alternative h1?
 It sure is, and this is an alternative h2 syntax
 ---------------------------------------
 
-# hi1
-## hi2
-### hi3
-#### hi4
+# h1
+## h2
+### h3
+#### h4
 
 hi how are ya? just adding a bit of [multiline text](https://google.com?q=multiline%20text "Google homepage") with a title for the link. And a [link](https://google.com) without to see how it works out in the parser ya know.
 
-##### hi5
+##### h5
 
 > een quite for your pleasure just one question, is it multiline? Yes it sure is sir
 
-###### hi6
+###### h6
 
 Okay so that seems to all work fine, how about some other stuff like *italic* text and using an alternative _italic_ text syntax to make it look more classic and give it a bit of an italian look.
 
