@@ -91,7 +91,7 @@ var app = (function() {
                     var templateData = renderTemplate(data);
                     contentElement.appendChild(templateData);
                 }
-                else if (fileType === "md") {
+                else if (fileType === "txt") {
                     contentElement.innerHTML = parseMd(data);
                 }
                 else {
