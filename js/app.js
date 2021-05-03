@@ -92,14 +92,7 @@ var app = (function() {
                     contentElement.appendChild(templateData);
                 }
                 else if (fileType === "md") {
-                    //contentElement.innerHTML = parseMd(data);
-
-                    var conv = new showdown.Converter({metadata: true});
-                    var html = conv.makeHtml(data);
-                    var metadata = conv.getMetadata(); // returns an object with the document metadata
-                    console.log(metadata);
-
-                    contentElement.innerHTML = html;
+                    contentElement.innerHTML = parseMd(data);
                 }
                 else {
                     contentElement.innerHTML = data;
