@@ -1,10 +1,3 @@
----
-jasnfdsn: sdnfisdfn
-dsnfpoidfop: dsfnioi
-dsknfiodf: dofnion
----
-
-
 Is this an alternative h1?
 =================
 
