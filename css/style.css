@@ -12,9 +12,6 @@ html {
 
 body {
     background-color: var(--main-bg-color);
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
 }
 
 /*

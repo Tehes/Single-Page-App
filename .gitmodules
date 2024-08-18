@@ -1,0 +1,3 @@
+[submodule "libs/parseMD"]
+	path = libs/parseMD
+	url = https://github.com/Tehes/parseMD.git
