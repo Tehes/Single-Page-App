@@ -41,7 +41,8 @@ function router() {
                 contentElement.appendChild(templateData);
             }
             else if (fileType === "txt") {
-                contentElement.innerHTML = parseMd(data);
+                contentElement.innerHTML = parseMd(data).content;
+                console.log(parseMd(data).metadata)
             }
             else {
                 contentElement.innerHTML = data;
