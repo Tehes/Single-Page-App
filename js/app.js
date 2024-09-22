@@ -22,8 +22,8 @@ function isGitHubPages() {
 
 // Build menu using GitHub API if on GitHub Pages
 async function buildMenuGitHubAPI() {
-    const repo = "dein-repo-name";  // Dein Repository Name
-    const user = "dein-github-username";  // Dein GitHub Username
+    const repo = "Single-Page-App";  // Dein Repository Name
+    const user = "tehes";  // Dein GitHub Username
     const apiURL = `https://api.github.com/repos/${user}/${repo}/contents/${directory}`;
 
     try {
