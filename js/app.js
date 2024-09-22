@@ -15,9 +15,47 @@ var contentElement = document.querySelector("main");
 /* --------------------------------------------------------------------------------------------------
 functions
 ---------------------------------------------------------------------------------------------------*/
-async function buildMenu() {
-    const directory = "content";  // Variable for the directory name
+// Function to detect if running on GitHub Pages
+function isGitHubPages() {
+    return window.location.hostname.endsWith("github.io");
+}
 
+// Build menu using GitHub API if on GitHub Pages
+async function buildMenuGitHubAPI() {
+    const repo = "dein-repo-name";  // Dein Repository Name
+    const user = "dein-github-username";  // Dein GitHub Username
+    const apiURL = `https://api.github.com/repos/${user}/${repo}/contents/${directory}`;
+
+    try {
+        const response = await fetch(apiURL);
+        if (!response.ok) {
+            throw new Error("Failed to fetch repository contents");
+        }
+
+        const files = await response.json();
+        const nav = document.querySelector("nav");
+
+        files.forEach(file => {
+            if (file.type === "file") {
+                let cleanFileName = file.name.split(".")[0]; // Remove file extension
+                fileType = file.name.split(".")[1];
+
+                const link = document.createElement("a");
+                link.href = `#${cleanFileName}`;
+                link.textContent = cleanFileName;
+                if (fileType !== "html") {
+                    link.setAttribute("data-file-type", fileType);
+                }
+                nav.appendChild(link);
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching repository contents:", error);
+    }
+}
+
+// Build menu using local file system (for local development or server with .htaccess)
+async function buildMenuLocal() {
     try {
         const response = await fetch(`${directory}/`);
         if (!response.ok) {
@@ -30,13 +68,12 @@ async function buildMenu() {
         const files = Array.from(doc.querySelectorAll("a"))
             .map(link => link.getAttribute("href"))
             .filter(file => {
-                // Filter out the parent directory and the directory itself
-                return file !== "/" && file !==`/${directory}`;
+                return file !== "/" && file !== `/${directory}`;
             });
 
         const nav = document.querySelector("nav");
         files.forEach(file => {
-            let cleanFileName = file.replace(`/${directory}/`, "").split(".")[0]; // Remove directory and file extension
+            let cleanFileName = file.replace(`/${directory}/`, "").split(".")[0];
             fileType = file.split(".")[1];
 
             const link = document.createElement("a");
@@ -44,7 +81,7 @@ async function buildMenu() {
             link.textContent = cleanFileName;
             if (fileType !== "html") {
                 link.setAttribute("data-file-type", fileType);
-            } 
+            }
             nav.appendChild(link);
         });
     } catch (error) {
@@ -123,7 +160,11 @@ function checkFileType(ev) {
 function init() {
     window.addEventListener("hashchange", router, false);
     window.addEventListener("DOMContentLoaded", function() {
-        buildMenu();
+        if (isGitHubPages()) {
+            buildMenuGitHubAPI();  // Use GitHub API if on GitHub Pages
+        } else {
+            buildMenuLocal();  // Use local file system if not on GitHub Pages
+        }
         router();
     }, false);
     document.addEventListener("click", checkFileType, false);
