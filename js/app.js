@@ -30,7 +30,7 @@ async function fetchFile(url) {
     // Check if the file is already in the cache
     if (fileCache.has(url)) {
         console.log(`Serving ${url} from cache.`);
-        return fileCache.get(url);  // Return cached response
+        return fileCache.get(url).clone();  // Return a clone of the cached response
     }
 
     // File is not in the cache, so fetch it from the network
