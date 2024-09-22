@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------------------------------
 IMPORTS
 ---------------------------------------------------------------------------------------------------*/
-import { parseMd } from '../libs/parseMD/parseMD.js';
+import { parseMd } from "../libs/parseMD/parseMD.js";
 
 /* --------------------------------------------------------------------------------------------------
 Variables
@@ -12,13 +12,49 @@ var standardFileType = "html";
 var directory = "content";
 var contentElement = document.querySelector("main");
 
-
-
 /* --------------------------------------------------------------------------------------------------
 functions
 ---------------------------------------------------------------------------------------------------*/
+async function buildMenu() {
+    const directory = "content";  // Variable for the directory name
+
+    try {
+        const response = await fetch(`${directory}/`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch directory contents");
+        }
+
+        const data = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data, "text/html");
+        const files = Array.from(doc.querySelectorAll("a"))
+            .map(link => link.getAttribute("href"))
+            .filter(file => {
+                // Filter out the parent directory and the directory itself
+                return file !== "/" && file !==`/${directory}`;
+            });
+
+        const nav = document.querySelector("nav");
+        files.forEach(file => {
+            let cleanFileName = file.replace(`/${directory}/`, "").split(".")[0]; // Remove directory and file extension
+            fileType = file.split(".")[1];
+
+            const link = document.createElement("a");
+            link.href = `#${cleanFileName}`;
+            link.textContent = cleanFileName;
+            if (fileType !== "html") {
+                link.setAttribute("data-file-type", fileType);
+            } 
+            nav.appendChild(link);
+        });
+    } catch (error) {
+        console.error("Error fetching directory contents:", error);
+    }
+}
+
 function router() {
     var hash = location.hash.substring(1) || startingPageName;
+    console.log(hash);
     fileType = fileType || standardFileType;
 
     fetch(directory + "/" + hash + "." + fileType)
@@ -42,32 +78,32 @@ function router() {
             }
             else if (fileType === "txt") {
                 contentElement.innerHTML = parseMd(data).content;
-                console.log(parseMd(data).metadata)
+                console.log(parseMd(data).metadata);
             }
             else {
                 contentElement.innerHTML = data;
             }
         })
         .catch(function (error) {
-            contentElement.innerHTML = '';
+            contentElement.innerHTML = "";
             contentElement.appendChild(
-                document.createTextNode('Error: ' + error.message)
+                document.createTextNode("Error: " + error.message)
             );
         });
 }
 
 function renderTemplate(data) {
     var list = document.createElement("ul");
-    for (var i = 0; i < data.products.length; i++) {
-        var listItem = document.createElement('li');
-        listItem.innerHTML = '<strong>' + data.products[i].Name + '</strong>';
-        listItem.innerHTML += ' can be found in ' + data.products[i].Location + '.';
-        listItem.innerHTML += ' Cost: <strong>£' + data.products[i].Price + '</strong>';
+    for (let i = 0; i < data.products.length; i++) {
+        var listItem = document.createElement("li");
+        listItem.innerHTML = "<strong>" + data.products[i].Name + "</strong>";
+        listItem.innerHTML += " can be found in " + data.products[i].Location + ".";
+        listItem.innerHTML += " Cost: <strong>£" + data.products[i].Price + "</strong>";
         list.appendChild(listItem);
     }
     var list2 = document.createElement("ul");
     var list2Item = "";
-    for (var i = 0; i < data.products.length; i++) {
+    for (let i = 0; i < data.products.length; i++) {
         list2Item += `
 			<li>
 				<strong>${data.products[i].Name}</strong>
@@ -80,14 +116,16 @@ function renderTemplate(data) {
     return list2;
 }
 
-function checkFileType() {
-    fileType = event.target.dataset.fileType || standardFileType;
+function checkFileType(ev) {
+    fileType = ev.target.dataset.fileType || standardFileType;
 }
 
 function init() {
-    document.addEventListener("touchstart", function () { }, false);
     window.addEventListener("hashchange", router, false);
-    window.addEventListener("DOMContentLoaded", router, false);
+    window.addEventListener("DOMContentLoaded", function() {
+        buildMenu();
+        router();
+    }, false);
     document.addEventListener("click", checkFileType, false);
 }
 
