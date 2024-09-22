@@ -10,28 +10,38 @@ const config = {
     startingPageName: "home",
     standardFileType: "html",
     directory: "content",
-    // Extract GitHub username and repository if URL is username.github.io/Repo
     user: window.location.hostname.split(".")[0],
-    repo: window.location.pathname.split("/")[1]
+    repo: window.location.pathname.split("/")[1],
+    isGitHubPages: window.location.hostname.endsWith("github.io")
 };
 
 /* --------------------------------------------------------------------------------------------------
 Variables
 ---------------------------------------------------------------------------------------------------*/
 let fileType;
-let files = [];  // Global files array to store the filenames with prefix
+let files = [];
+const fileCache = new Map();
 const contentElement = document.querySelector("main");
 
 /* --------------------------------------------------------------------------------------------------
 Utility functions
 ---------------------------------------------------------------------------------------------------*/
-function fetchFile(url) {
-    return fetch(url).then(response => {
-        if (!response.ok) {
-            throw new Error("HTTP error, status = " + response.status);
-        }
-        return response;
-    });
+async function fetchFile(url) {
+    // Check if the file is already in the cache
+    if (fileCache.has(url)) {
+        console.log(`Serving ${url} from cache.`);
+        return fileCache.get(url);  // Return cached response
+    }
+
+    // File is not in the cache, so fetch it from the network
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} (${response.statusText}) when trying to fetch ${url}`);
+    }
+
+    // Store the response in the cache
+    fileCache.set(url, response.clone());  // Use response.clone() since Response objects can only be read once
+    return response;
 }
 
 function extractFileType(file) {
@@ -43,8 +53,11 @@ function isValidFileType(fileType) {
 }
 
 function removePrefix(fileName) {
-    // Remove the number prefix like "01_", "02_", etc.
     return fileName.replace(/^\d+_/, "");
+}
+
+function getCleanFileName(file) {
+    return removePrefix(file.replace(`/${config.directory}/`, "").split(".")[0]);
 }
 
 /* --------------------------------------------------------------------------------------------------
@@ -52,91 +65,84 @@ Main functions
 ---------------------------------------------------------------------------------------------------*/
 async function buildMenu() {
     const nav = document.querySelector("nav");
-    const isGitHubPages = window.location.hostname.endsWith("github.io");
 
     try {
-        if (isGitHubPages) {
-            const apiURL = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}`;
-            const response = await fetchFile(apiURL);
-            files = await response.json();  // Store file names globally
-            files = files.map(file => file.name).sort();  // Store only filenames (not full paths)
+        const apiURL = config.isGitHubPages 
+            ? `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}` 
+            : `${config.directory}/`;
+
+        const response = await fetchFile(apiURL);
+        if (config.isGitHubPages) {
+            files = (await response.json()).map(file => file.name).sort();
         } else {
-            const response = await fetchFile(`${config.directory}/`);
             const data = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, "text/html");
             files = Array.from(doc.querySelectorAll("a"))
-                .map(link => link.getAttribute("href").replace(`/${config.directory}/`, ""))  // Remove content directory from path
+                .map(link => link.getAttribute("href").replace(`/${config.directory}/`, ""))
                 .filter(file => file !== "/" && file !== `/${config.directory}`)
-                .sort();  // Sort files alphabetically based on the prefix
+                .sort();
         }
 
-        // Build menu
         files.forEach(file => {
-            const cleanFileName = file.split(".")[0];  // Remove extension
-            fileType = extractFileType(file);
+            const cleanFileName = file.split(".")[0];
+            const fileType = extractFileType(file);
 
             if (!isValidFileType(fileType)) return;
 
-            // Remove the numeric prefix for the link text
             const linkText = removePrefix(cleanFileName);
 
             const link = document.createElement("a");
-            link.href = `#${linkText}`;  // Use the cleaned name for the URL fragment
-            link.textContent = linkText;  // Use the cleaned name for the link text
+            link.href = `#${linkText}`;
+            link.textContent = linkText;
             if (fileType !== config.standardFileType) {
                 link.setAttribute("data-file-type", fileType);
             }
             nav.appendChild(link);
         });
+
+        router();
     } catch (error) {
         console.error("Error fetching directory contents:", error);
     }
-    
-    // Call Router
-    router();
 }
 
-// Router function
-function router() {
+async function router() {
     const hash = location.hash.substring(1) || config.startingPageName;
 
-    // Find the matching file based on the hash (after removing prefix)
-    let matchingFile = files.find(file => {
-        const cleanFileName = removePrefix(file.replace(`/${config.directory}/`, "").split(".")[0]);
-        return cleanFileName === hash;
-    });
+    let matchingFile = files.find(file => getCleanFileName(file) === hash);
 
     if (!matchingFile) {
-        console.error(`No file matching the hash "${hash}" found.`);
+        console.error(`No file matching the hash "${hash}" found in files:`, files);
         return;
     }
 
-    // Extract the file type (e.g. html, json, txt) from the matching file
     fileType = extractFileType(matchingFile);
 
-    // Fetch the correct file using the full filename (with prefix)
-    fetchFile(`${config.directory}/${matchingFile}`)
-        .then(response => (fileType === "json" ? response.json() : response.text()))
-        .then(data => {
-            contentElement.innerHTML = "";
-            if (fileType === "json") {
-                const templateData = renderTemplate(data);
-                contentElement.appendChild(templateData);
-            } else if (fileType === "txt") {
-                contentElement.innerHTML = parseMd(data).content;
-            } else {
-                contentElement.innerHTML = data;
-            }
-        })
-        .catch(error => {
-            contentElement.innerHTML = "";
-            contentElement.appendChild(
-                document.createTextNode("Error: " + error.message)
-            );
-        });
+    try {
+        const response = await fetchFile(`${config.directory}/${matchingFile}`);
+        const data = fileType === "json" ? await response.json() : await response.text();
+
+        contentElement.innerHTML = "";
+        if (fileType === "json") {
+            const templateData = renderTemplate(data);
+            contentElement.appendChild(templateData);
+        } else if (fileType === "txt") {
+            contentElement.innerHTML = parseMd(data).content;
+        } else {
+            contentElement.innerHTML = data;
+        }
+    } catch (error) {
+        contentElement.innerHTML = "";
+        contentElement.appendChild(
+            document.createTextNode(`Error: ${error.message}`)
+        );
+    }
 }
 
+/* --------------------------------------------------------------------------------------------------
+Helper functions
+---------------------------------------------------------------------------------------------------*/
 function renderTemplate(data) {
     const list = document.createElement("ul");
     data.products.forEach(product => {
@@ -153,9 +159,7 @@ function checkFileType(ev) {
 
 function init() {
     window.addEventListener("hashchange", router, false);
-    window.addEventListener("DOMContentLoaded", function() {
-        buildMenu();
-    }, false);
+    window.addEventListener("DOMContentLoaded", buildMenu, false);
     document.addEventListener("click", checkFileType, false);
 }
 
