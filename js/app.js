@@ -10,8 +10,9 @@ const config = {
     startingPageName: "home",
     standardFileType: "html",
     directory: "content",
-    repo: "Single-Page-App",  // GitHub repository name
-    user: "tehes",            // GitHub username
+    // Extract GitHub username and repository if URL is username.github.io/Repo
+    user: window.location.hostname.split(".")[0],
+    repo: window.location.pathname.split("/")[1]
 };
 
 /* --------------------------------------------------------------------------------------------------
@@ -91,6 +92,9 @@ async function buildMenu() {
     } catch (error) {
         console.error("Error fetching directory contents:", error);
     }
+    
+    // Call Router
+    router();
 }
 
 // Router function
@@ -102,7 +106,6 @@ function router() {
         const cleanFileName = removePrefix(file.replace(`/${config.directory}/`, "").split(".")[0]);
         return cleanFileName === hash;
     });
-    console.log(files);
 
     if (!matchingFile) {
         console.error(`No file matching the hash "${hash}" found.`);
@@ -152,7 +155,6 @@ function init() {
     window.addEventListener("hashchange", router, false);
     window.addEventListener("DOMContentLoaded", function() {
         buildMenu();
-        router();
     }, false);
     document.addEventListener("click", checkFileType, false);
 }
