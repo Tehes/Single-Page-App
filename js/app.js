@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------------------------------
-IMPORTS
+Imports
 ---------------------------------------------------------------------------------------------------*/
 import { parseMd } from "../libs/parseMD/parseMD.js";
 
@@ -18,6 +18,7 @@ const config = {
 Variables
 ---------------------------------------------------------------------------------------------------*/
 let fileType;
+let files = [];  // Global files array to store the filenames with prefix
 const contentElement = document.querySelector("main");
 
 /* --------------------------------------------------------------------------------------------------
@@ -40,43 +41,48 @@ function isValidFileType(fileType) {
     return fileType !== "htaccess";
 }
 
+function removePrefix(fileName) {
+    // Remove the number prefix like "01_", "02_", etc.
+    return fileName.replace(/^\d+_/, "");
+}
+
 /* --------------------------------------------------------------------------------------------------
 Main functions
 ---------------------------------------------------------------------------------------------------*/
-// Build menu for both local system and GitHub Pages
 async function buildMenu() {
     const nav = document.querySelector("nav");
-    let files;
     const isGitHubPages = window.location.hostname.endsWith("github.io");
 
     try {
         if (isGitHubPages) {
-            // Fetch files using GitHub API
             const apiURL = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}`;
             const response = await fetchFile(apiURL);
-            files = await response.json();
-            files = files.map(file => file.name);
+            files = await response.json();  // Store file names globally
+            files = files.map(file => file.name).sort();  // Store only filenames (not full paths)
         } else {
-            // Fetch files from local system
             const response = await fetchFile(`${config.directory}/`);
             const data = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, "text/html");
             files = Array.from(doc.querySelectorAll("a"))
-                .map(link => link.getAttribute("href"))
-                .filter(file => file !== "/" && file !== `/${config.directory}`);
+                .map(link => link.getAttribute("href").replace(`/${config.directory}/`, ""))  // Remove content directory from path
+                .filter(file => file !== "/" && file !== `/${config.directory}`)
+                .sort();  // Sort files alphabetically based on the prefix
         }
 
         // Build menu
         files.forEach(file => {
-            const cleanFileName = file.replace(`/${config.directory}/`, "").split(".")[0];
+            const cleanFileName = file.split(".")[0];  // Remove extension
             fileType = extractFileType(file);
 
             if (!isValidFileType(fileType)) return;
 
+            // Remove the numeric prefix for the link text
+            const linkText = removePrefix(cleanFileName);
+
             const link = document.createElement("a");
-            link.href = `#${cleanFileName}`;
-            link.textContent = cleanFileName;
+            link.href = `#${linkText}`;  // Use the cleaned name for the URL fragment
+            link.textContent = linkText;  // Use the cleaned name for the link text
             if (fileType !== config.standardFileType) {
                 link.setAttribute("data-file-type", fileType);
             }
@@ -87,11 +93,27 @@ async function buildMenu() {
     }
 }
 
+// Router function
 function router() {
     const hash = location.hash.substring(1) || config.startingPageName;
-    fileType = fileType || config.standardFileType;
 
-    fetchFile(`${config.directory}/${hash}.${fileType}`)
+    // Find the matching file based on the hash (after removing prefix)
+    let matchingFile = files.find(file => {
+        const cleanFileName = removePrefix(file.replace(`/${config.directory}/`, "").split(".")[0]);
+        return cleanFileName === hash;
+    });
+    console.log(files);
+
+    if (!matchingFile) {
+        console.error(`No file matching the hash "${hash}" found.`);
+        return;
+    }
+
+    // Extract the file type (e.g. html, json, txt) from the matching file
+    fileType = extractFileType(matchingFile);
+
+    // Fetch the correct file using the full filename (with prefix)
+    fetchFile(`${config.directory}/${matchingFile}`)
         .then(response => (fileType === "json" ? response.json() : response.text()))
         .then(data => {
             contentElement.innerHTML = "";
