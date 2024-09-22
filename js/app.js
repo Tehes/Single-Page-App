@@ -4,68 +4,80 @@ IMPORTS
 import { parseMd } from "../libs/parseMD/parseMD.js";
 
 /* --------------------------------------------------------------------------------------------------
-Variables
+Configuration
 ---------------------------------------------------------------------------------------------------*/
-var startingPageName = "home";
-var fileType;
-var standardFileType = "html";
-var directory = "content";
-var contentElement = document.querySelector("main");
+const config = {
+    startingPageName: "home",
+    standardFileType: "html",
+    directory: "content",
+    repo: "Single-Page-App",  // GitHub repository name
+    user: "tehes",            // GitHub username
+};
 
 /* --------------------------------------------------------------------------------------------------
-functions
+Variables
+---------------------------------------------------------------------------------------------------*/
+let fileType;
+const contentElement = document.querySelector("main");
+
+/* --------------------------------------------------------------------------------------------------
+Utility functions
+---------------------------------------------------------------------------------------------------*/
+function fetchFile(url) {
+    return fetch(url).then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP error, status = " + response.status);
+        }
+        return response;
+    });
+}
+
+function extractFileType(file) {
+    return file.split(".")[1];
+}
+
+function isValidFileType(fileType) {
+    return fileType !== "htaccess";
+}
+
+/* --------------------------------------------------------------------------------------------------
+Main functions
 ---------------------------------------------------------------------------------------------------*/
 // Build menu for both local system and GitHub Pages
 async function buildMenu() {
     const nav = document.querySelector("nav");
     let files;
-
-    // Determine if running on GitHub Pages
     const isGitHubPages = window.location.hostname.endsWith("github.io");
 
     try {
         if (isGitHubPages) {
-            // GitHub Pages: Use GitHub API to fetch files
-            const repo = "Single-Page-App";  // Dein Repository Name
-            const user = "tehes";  // Dein GitHub Username
-            const apiURL = `https://api.github.com/repos/${user}/${repo}/contents/${directory}`;
-
-            const response = await fetch(apiURL);
-            if (!response.ok) {
-                throw new Error("Failed to fetch repository contents");
-            }
-
+            // Fetch files using GitHub API
+            const apiURL = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}`;
+            const response = await fetchFile(apiURL);
             files = await response.json();
             files = files.map(file => file.name);
         } else {
-            // Local system: Fetch files from local directory
-            const response = await fetch(`${directory}/`);
-            if (!response.ok) {
-                throw new Error("Failed to fetch directory contents");
-            }
-
+            // Fetch files from local system
+            const response = await fetchFile(`${config.directory}/`);
             const data = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, "text/html");
             files = Array.from(doc.querySelectorAll("a"))
                 .map(link => link.getAttribute("href"))
-                .filter(file => {
-                    return file !== "/" && file !== `/${directory}`;
-                });
+                .filter(file => file !== "/" && file !== `/${config.directory}`);
         }
 
-        // Process the files and build the menu
+        // Build menu
         files.forEach(file => {
-            let cleanFileName = file.replace(`/${directory}/`, "").split(".")[0];
-            fileType = file.split(".")[1];
+            const cleanFileName = file.replace(`/${config.directory}/`, "").split(".")[0];
+            fileType = extractFileType(file);
 
-            // Exclude .htaccess file based on fileType
-            if (fileType === "htaccess") return;
+            if (!isValidFileType(fileType)) return;
 
             const link = document.createElement("a");
             link.href = `#${cleanFileName}`;
             link.textContent = cleanFileName;
-            if (fileType !== "html") {
+            if (fileType !== config.standardFileType) {
                 link.setAttribute("data-file-type", fileType);
             }
             nav.appendChild(link);
@@ -76,37 +88,23 @@ async function buildMenu() {
 }
 
 function router() {
-    var hash = location.hash.substring(1) || startingPageName;
-    fileType = fileType || standardFileType;
+    const hash = location.hash.substring(1) || config.startingPageName;
+    fileType = fileType || config.standardFileType;
 
-    fetch(directory + "/" + hash + "." + fileType)
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error("HTTP error, status = " + response.status);
-            }
-            if (fileType === "json") {
-                return response.json();
-            }
-            else {
-                return response.text();
-            }
-        })
-        .then(function (data) {
+    fetchFile(`${config.directory}/${hash}.${fileType}`)
+        .then(response => (fileType === "json" ? response.json() : response.text()))
+        .then(data => {
             contentElement.innerHTML = "";
-
             if (fileType === "json") {
-                var templateData = renderTemplate(data);
+                const templateData = renderTemplate(data);
                 contentElement.appendChild(templateData);
-            }
-            else if (fileType === "txt") {
+            } else if (fileType === "txt") {
                 contentElement.innerHTML = parseMd(data).content;
-                console.log(parseMd(data).metadata);
-            }
-            else {
+            } else {
                 contentElement.innerHTML = data;
             }
         })
-        .catch(function (error) {
+        .catch(error => {
             contentElement.innerHTML = "";
             contentElement.appendChild(
                 document.createTextNode("Error: " + error.message)
@@ -115,31 +113,17 @@ function router() {
 }
 
 function renderTemplate(data) {
-    var list = document.createElement("ul");
-    for (let i = 0; i < data.products.length; i++) {
-        var listItem = document.createElement("li");
-        listItem.innerHTML = "<strong>" + data.products[i].Name + "</strong>";
-        listItem.innerHTML += " can be found in " + data.products[i].Location + ".";
-        listItem.innerHTML += " Cost: <strong>£" + data.products[i].Price + "</strong>";
+    const list = document.createElement("ul");
+    data.products.forEach(product => {
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `<strong>${product.Name}</strong> can be found in ${product.Location}. Cost: <strong>£${product.Price}</strong>`;
         list.appendChild(listItem);
-    }
-    var list2 = document.createElement("ul");
-    var list2Item = "";
-    for (let i = 0; i < data.products.length; i++) {
-        list2Item += `
-			<li>
-				<strong>${data.products[i].Name}</strong>
-				can be found in ${data.products[i].Location}.
-				Cost: <strong>£ ${data.products[i].Price}</strong>
-			</li>
-			`;
-    }
-    list2.innerHTML = list2Item;
-    return list2;
+    });
+    return list;
 }
 
 function checkFileType(ev) {
-    fileType = ev.target.dataset.fileType || standardFileType;
+    fileType = ev.target.dataset.fileType || config.standardFileType;
 }
 
 function init() {
