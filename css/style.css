@@ -8,14 +8,20 @@
 
 html {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
+    max-width: 70ch;
+    padding: 3em 1em;
+    margin: auto;
+    line-height: 1.75;
+    font-size: 1.25em;
+  }
 
 body {
     background-color: var(--main-bg-color);
 }
 
-nav a {
-    margin: 0 10px;
+nav {
+    display: flex;
+    gap: 10px;
 }
 
 /*
