@@ -110,7 +110,7 @@ async function buildMenu() {
 async function router() {
     const hash = location.hash.substring(1) || config.startingPageName;
 
-    let matchingFile = files.find(file => getCleanFileName(file) === hash);
+    const matchingFile = files.find(file => getCleanFileName(file) === hash);
 
     if (!matchingFile) {
         console.error(`No file matching the hash "${hash}" found in files:`, files);
@@ -163,4 +163,8 @@ function init() {
     document.addEventListener("click", checkFileType, false);
 }
 
-init();
+app = {
+    init
+};
+
+app.init();
