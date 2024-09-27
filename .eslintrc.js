@@ -9,9 +9,6 @@ module.exports = {
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
-    "globals": {
-        "app": "writable" // Allow the global variable 'app' to be used as readonly
-    },
     "rules": {
         // Enforce semicolons at the end of statements
         "semi": ["error", "always"],

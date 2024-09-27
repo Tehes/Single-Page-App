@@ -163,8 +163,8 @@ function init() {
     document.addEventListener("click", checkFileType, false);
 }
 
-app = {
+window.app = {
     init
 };
 
-app.init();
+window.app.init();
