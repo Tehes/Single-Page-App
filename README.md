@@ -8,8 +8,8 @@ This is a **Single-Page Application (SPA)** designed to dynamically build a navi
 
 - **Dynamic Menu Generation**: Automatically generates a navigation menu based on files in a specified directory.
 - **GitHub Integration**: Supports fetching files directly from a GitHub repository using the GitHub API when hosted on GitHub Pages.
-- **Cache Mechanism**: Implements a caching system to prevent repeated network requests for the same content, improving performance.
-- **Markdown Parsing**: Supports the display of Markdown content by converting it into HTML using the \`parseMd\` function.
+- **Caching Mechanism**: Implements a cache-then-network strategy for better performance. On the first access, content is fetched from the network and then cached. For subsequent requests during the session, the cached content is served unless the page is reloaded, improving speed and reducing redundant network requests.
+- **Markdown Parsing**: Supports the display of Markdown content by converting it into HTML using the `parseMd` function.
 - **Frontmatter Extraction**: Extracts and processes YAML Frontmatter for Markdown files.
 - **Responsive Updates**: Automatically updates the page content when navigation links are clicked.
 
@@ -28,6 +28,12 @@ The navigation menu is built dynamically based on the files present in the \`con
 The app supports rendering content in various formats:
 - **Markdown Files**: Markdown files are parsed and converted to HTML using the \`parseMd\` function.
 - **Plain Text and JSON**: Plain text files and JSON files are also supported for display.
+
+### Caching Mechanism
+
+The app uses a **cache-then-network** strategy for its content. On the first request for a resource (like a page or file), the app fetches it from the network and stores it in the cache. For any subsequent requests within the same session, the content is served directly from the cache, improving load times. If the page is reloaded, the cache is reset, and the process starts over.
+
+The Service Worker handles this caching, ensuring that resources are cached dynamically as they are fetched. This means that once a file is accessed, it will be available from the cache for the rest of the session, even if the user goes offline.
 
 ## Installation and Setup
 
