@@ -60,8 +60,8 @@ async function buildMenu() {
     const nav = document.querySelector("nav");
 
     try {
-        const apiURL = config.isGitHubPages 
-            ? `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}` 
+        const apiURL = config.isGitHubPages
+            ? `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.directory}`
             : `${config.directory}/`;
 
         const response = await fetchFile(apiURL);
@@ -118,8 +118,17 @@ async function router() {
 
         contentElement.innerHTML = "";
         if (fileType === "json") {
-            const templateData = renderTemplate(data);
-            contentElement.appendChild(templateData);
+            // Use the cleaned file name (without prefix and extension) to match the template ID
+            const cleanedFileName = getCleanFileName(matchingFile);
+
+            // Select the template dynamically based on the cleaned file name
+            const template = document.querySelector(`#${cleanedFileName}`);
+
+            if (template) {
+                renderTemplate(template, data, contentElement);
+            } else {
+                console.error(`No template found with ID: ${cleanedFileName}`);
+            }
         } else if (fileType === "txt") {
             contentElement.innerHTML = parseMd(data).content;
         } else {
@@ -136,16 +145,6 @@ async function router() {
 /* --------------------------------------------------------------------------------------------------
 Helper functions
 ---------------------------------------------------------------------------------------------------*/
-function renderTemplate(data) {
-    const list = document.createElement("ul");
-    data.products.forEach(product => {
-        const listItem = document.createElement("li");
-        listItem.innerHTML = `<strong>${product.Name}</strong> can be found in ${product.Location}. Cost: <strong>£${product.Price}</strong>`;
-        list.appendChild(listItem);
-    });
-    return list;
-}
-
 function checkFileType(ev) {
     fileType = ev.target.dataset.fileType || config.standardFileType;
 }
@@ -165,7 +164,7 @@ window.app.init();
 /* --------------------------------------------------------------------------------------------------
 Service Worker configuration. Toggle 'useServiceWorker' to enable or disable the Service Worker.
 ---------------------------------------------------------------------------------------------------*/
-const useServiceWorker = true; // Set to "true" if you want to register the Service Worker, "false" to unregister
+const useServiceWorker = false; // Set to "true" if you want to register the Service Worker, "false" to unregister
 
 async function registerServiceWorker() {
     try {
