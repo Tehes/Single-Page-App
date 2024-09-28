@@ -2,6 +2,7 @@
 Imports
 ---------------------------------------------------------------------------------------------------*/
 import { parseMd } from "../libs/parseMD/parseMD.js";
+import { renderTemplate } from "../libs/vanillaTemplates/js/renderTemplate.js";
 
 /* --------------------------------------------------------------------------------------------------
 Configuration
