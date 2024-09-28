@@ -70,3 +70,68 @@ const config = {
 ## Usage Example
 
 Once the app is up and running, it will dynamically generate the navigation menu based on the contents of the \`content/\` directory. Clicking on a link in the menu will load the corresponding file\'s content into the page without a full page reload.
+
+## Adding Templates for JSON Files
+
+The app also supports rendering templates for JSON data. Templates are defined within the HTML using the `<template>` tag, and the `renderTemplate` function dynamically fills them based on the structure of your JSON file.
+
+```json
+{
+  "name": {
+    "first": "Max",
+    "last": "Mustermann"
+  },
+  "age": "44",
+  "friends": [
+    {
+      "name": "Nils",
+      "age": 20
+    },
+    {
+      "name": "Teddy",
+      "age": 10
+    },
+    {
+      "name": "Nelson",
+      "age": 40
+    }
+  ],
+  "hobbies": [
+    "singing",
+    "dancing",
+    "reading",
+    "cycling"
+  ],
+  "profilePic": "https://www.fillmurray.com/300/300",
+  "facebook": "https://de.wikipedia.org/wiki/Bill_Murray"
+}
+```
+### Corresponding HTML Template
+
+The following HTML template will render the JSON data:
+
+```HTML
+<template id="persons">
+  <p>Name: <var>name.first</var> <var>name.last</var></p>
+  <p>Age: <var>age</var></p>
+  <p>Friends:
+    <var data-loop="friends">
+      <var>name</var> (<var>age</var>),
+    </var>
+  </p>
+  <p>Hobbies:
+    <ol>
+      <var data-loop="hobbies">
+        <li><var></var></li>
+      </var>
+    </ol>
+  </p>
+  <img src="" data-attr="src:profilePic" alt="Profile Picture">
+  <a href="" data-attr="href:facebook">Wiki: <var>name.first</var> <var>name.last</var></a>
+</template>
+```
+
+### Usage
+
+When the app loads the persons.json file, it will automatically apply the corresponding template and render the content into the web page. This allows for flexible content generation without needing to write raw HTML for each data entry.
+
