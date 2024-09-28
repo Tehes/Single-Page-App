@@ -1,4 +1,4 @@
-const CACHE_NAME = "--your-app-cache-v1";
+const CACHE_NAME = "--SPA-cache-v1";
 
 // A Map that tracks network requests during the session
 const sessionCacheMap = new Map();
