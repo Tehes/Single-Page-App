@@ -20,27 +20,19 @@ Variables
 ---------------------------------------------------------------------------------------------------*/
 let fileType;
 let files = [];
-const fileCache = new Map();
 const contentElement = document.querySelector("main");
 
 /* --------------------------------------------------------------------------------------------------
 Utility functions
 ---------------------------------------------------------------------------------------------------*/
 async function fetchFile(url) {
-    // Check if the file is already in the cache
-    if (fileCache.has(url)) {
-        console.log(`Serving ${url} from cache.`);
-        return fileCache.get(url).clone();  // Return a clone of the cached response
-    }
-
-    // File is not in the cache, so fetch it from the network
+    // Fetch the file from the network
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`HTTP error: ${response.status} (${response.statusText}) when trying to fetch ${url}`);
     }
 
-    // Store the response in the cache
-    fileCache.set(url, response.clone());  // Use response.clone() since Response objects can only be read once
+    // Return the network response (Service Worker handles caching)
     return response;
 }
 
@@ -168,3 +160,38 @@ window.app = {
 };
 
 window.app.init();
+
+/* --------------------------------------------------------------------------------------------------
+Service Worker configuration. Toggle 'useServiceWorker' to enable or disable the Service Worker.
+---------------------------------------------------------------------------------------------------*/
+const useServiceWorker = true; // Set to "true" if you want to register the Service Worker, "false" to unregister
+
+async function registerServiceWorker() {
+    try {
+        const currentPath = window.location.pathname;
+        const registration = await navigator.serviceWorker.register(`${currentPath}service-worker.js`);
+        console.log("Service Worker registered with scope:", registration.scope);
+    } catch (error) {
+        console.log("Service Worker registration failed:", error);
+    }
+}
+
+async function unregisterServiceWorkers() {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+        const success = await registration.unregister();
+        if (success) {
+            console.log("Service Worker successfully unregistered.");
+        }
+    }
+}
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+        if (useServiceWorker) {
+            await registerServiceWorker();
+        } else {
+            await unregisterServiceWorkers();
+        }
+    });
+}
