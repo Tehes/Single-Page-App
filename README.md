@@ -29,6 +29,7 @@ Instead of hard-coding HTML templates inside the main HTML file, templates are n
    ```bash
    git clone https://github.com/your-username/Single-Page-App.git
    cd Single-Page-App
+   ```
 
 2. **Directory Structure**:
    Ensure that the `content/` and `templates/` directories are filled with the necessary files. File names in the `content/` directory can be prefixed with numbers to define their order in the menu, but these prefixes will not appear in the menu links.
@@ -37,6 +38,7 @@ Instead of hard-coding HTML templates inside the main HTML file, templates are n
    You can run the app locally by opening the `index.html` file in your browser or serving it with a simple HTTP server:
    ```bash
    npx serve
+   ```
 
 4. **Deploy on GitHub Pages**:
    - To host the app on GitHub Pages, push the project to a GitHub repository and enable GitHub Pages in the repository settings.
@@ -135,3 +137,4 @@ When the app loads a JSON file (like `persons.json`), it automatically applies t
 For example, with the `persons.json` structure mentioned above, the app will fetch the JSON file, load the appropriate template (`#persons`), and dynamically inject the data into the template tags using the `renderTemplate` function.
 
 This allows for flexible content generation without needing to write raw HTML for each data entry, making it easy to manage and display various types of content.
+```
