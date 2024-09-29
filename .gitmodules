@@ -1,6 +1,7 @@
 [submodule "libs/parseMD"]
-	path = libs/parseMD
-	url = https://github.com/Tehes/parseMD.git
+path = libs/parseMD
+url = https://github.com/Tehes/parseMD.git
+
 [submodule "libs/vanillaTemplates"]
-	path = libs/vanillaTemplates
-	url = https://github.com/Tehes/vanillaTemplates.git
+path = libs/vanillaTemplates
+url = https://github.com/Tehes/vanillaTemplates.git
