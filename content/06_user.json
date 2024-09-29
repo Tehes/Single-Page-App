@@ -1,0 +1,10 @@
+{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "avatar": "avatar.jpg",
+    "hobbies": [
+        "Reading",
+        "Gaming",
+        "Traveling"
+    ]
+}
