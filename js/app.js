@@ -37,6 +37,26 @@ async function fetchFile(url) {
     return response;
 }
 
+async function loadTemplate(templateName) {
+    const templatePath = `templates/${templateName}.html`;
+    const templateTag = document.querySelector("template");
+
+    try {
+        const response = await fetch(templatePath);
+        if (!response.ok) {
+            throw new Error(`Failed to load template: ${templatePath}`);
+        }
+
+        const templateHTML = await response.text();
+        templateTag.innerHTML = templateHTML; // Populate the existing <template> tag with the loaded HTML
+
+        return templateTag;  // Return the updated template element
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
 function extractFileType(file) {
     return file.split(".")[1];
 }
@@ -102,7 +122,6 @@ async function buildMenu() {
 
 async function router() {
     const hash = location.hash.substring(1) || config.startingPageName;
-
     const matchingFile = files.find(file => getCleanFileName(file) === hash);
 
     if (!matchingFile) {
@@ -119,15 +138,12 @@ async function router() {
         contentElement.innerHTML = "";
         if (fileType === "json") {
             // Use the cleaned file name (without prefix and extension) to match the template ID
-            const cleanedFileName = getCleanFileName(matchingFile);
-
-            // Select the template dynamically based on the cleaned file name
-            const template = document.querySelector(`#${cleanedFileName}`);
-
-            if (template) {
-                renderTemplate(template, data, contentElement);
-            } else {
-                console.error(`No template found with ID: ${cleanedFileName}`);
+            const templateTag = await loadTemplate(hash); // Load the corresponding template and insert it
+            if (templateTag) {
+                renderTemplate(templateTag, data, contentElement);
+            }
+            else {
+                console.error(`No template found for "${hash}".`);
             }
         } else if (fileType === "txt") {
             contentElement.innerHTML = parseMd(data).content;
