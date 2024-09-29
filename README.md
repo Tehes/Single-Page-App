@@ -55,7 +55,7 @@ const config = {
     repo: window.location.pathname.split("/")[1],  // GitHub repository name (autodetected)
     isGitHubPages: window.location.hostname.endsWith("github.io")  // Detect GitHub Pages environment
 };
-````
+```
 
 ### Customization
 
@@ -101,7 +101,7 @@ The app also supports rendering templates for JSON data. Templates are defined w
   "profilePic": "https://www.fillmurray.com/300/300",
   "facebook": "https://de.wikipedia.org/wiki/Bill_Murray"
 }
-````
+```
 
 ### Corresponding HTML Template
 
@@ -126,7 +126,7 @@ The following HTML template will render the JSON data:
   <img src="" data-attr="src:profilePic" alt="Profile Picture">
   <a href="" data-attr="href:facebook">Wiki: <var>name.first</var> <var>name.last</var></a>
 </template>
-````
+```
 
 ### Usage
 
